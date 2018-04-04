@@ -5,37 +5,36 @@ import "./BytesOp.sol";
 contract Dispatcher is BytesOp{
 
 	/*
-	@param 	_data	 		Concantated array of call elements.
-							An element should consist of a destination
-							address, an input and the length of the input
-	@param 	_mayRollback 	Rollback all changes if any call fails.
-
-	@dev 	Data should be serialized as
-			(destinationAddr0 + inputLen0 + input0 +
-			destinationAddr1 + inputLen1 + input1 + .. )
+	@param _data Concantated array of call elements. 
+	An element should consist of a destinationaddress,
+	an input and the length of the input
+	@param _mayRollback Rollback all changes if any call fails.
+	@dev Data should be serialized as
+	(destinationAddr0 + inputLen0 + input0 +
+	destinationAddr1 + inputLen1 + input1 + .. )
  	*/
 
-	function forwardBatch(bytes _data,bool _mayRollback) public {
+	function forwardBatch(bytes _data, bool _mayRollback) public {
 	
 		uint ptr = dataPtr(_data);
 		uint end = ptr + _data.length;
-		forwardBatch(ptr,end,_mayRollback,0);
+		forwardBatch(ptr, end, _mayRollback,0);
 	}
 
 
-	function forwardBatch(uint ptr,uint end,bool mayRollback, uint8 callIndex) internal {
+	function forwardBatch(uint ptr, uint end, bool mayRollback, uint8 callIndex) internal {
 	
 		bytes memory calldata;
 		address dest;
-		(dest,calldata) = deserialize(ptr);
+		(dest, calldata) = deserialize(ptr);
 		//require(isContract(dest))
-		bool success = fwd(dest,calldata);
+		bool success = fwd(dest, calldata);
 		if(mayRollback && !success){
 			revert(); // revert(callIndex);
 		} 
 		ptr += ADDRESS_SIZE + WORD_SIZE + calldata.length;
 		if(end > ptr){
-			forwardBatch(ptr,end,mayRollback,callIndex+1);
+			forwardBatch(ptr, end, mayRollback, callIndex + 1);
 		}
 	}
 
@@ -44,7 +43,7 @@ contract Dispatcher is BytesOp{
 	
 		dest = toAddress(ptr);
 		uint calldatalen = toUint(ADDRESS_SIZE + ptr);
-		calldata = toBytes((ADDRESS_SIZE + WORD_SIZE + ptr),calldatalen);
+		calldata = toBytes((ADDRESS_SIZE + WORD_SIZE + ptr), calldatalen);
 	}
 
 
@@ -69,7 +68,7 @@ contract Dispatcher is BytesOp{
 	}
 
 
-	function forwardBatchStraightforward(bytes _data,bool _rollback) public {
+	function forwardBatchStraightforward(bytes _data, bool _rollback) public {
 
 		uint ptr = dataPtr(_data);
 		uint end = ptr + _data.length;
@@ -79,13 +78,13 @@ contract Dispatcher is BytesOp{
 			address dest = toAddress(ptr);
 			//require(isContract(dest))
 			uint calldatalen = toUint(ADDRESS_SIZE + ptr);
-			bytes memory calldata = toBytes(( ADDRESS_SIZE + WORD_SIZE + ptr),calldatalen);
+			bytes memory calldata = toBytes((ADDRESS_SIZE + WORD_SIZE + ptr), calldatalen);
 			ptr += ADDRESS_SIZE + WORD_SIZE + calldatalen;
 			assembly{
-				success := call(sub(gas,5000),
+				success := call(sub(gas, 5000),
 					dest,
 					0,
-					add(calldata,0x20),
+					add(calldata, 0x20),
 					mload(calldata),
 					0,0)
 			}

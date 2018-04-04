@@ -1,7 +1,7 @@
 
 
 
-contract Test{
+contract Forwarder{
 
 	bool public success;
 
