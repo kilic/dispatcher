@@ -1,4 +1,4 @@
-### What is dispatcher good for
+### What dispatcher is good for
 
 Dispatcher allows an account to make multiple arbitrary contract call in one transaction.
 
